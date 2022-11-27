@@ -1,0 +1,4 @@
+requests==2.28.1
+datetime==3.11
+json==3.9
+tqdm==4.64.1
