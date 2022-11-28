@@ -43,8 +43,14 @@ class Vk:
                   'extended': 1,
                   'rev': 1
                   }
-        photo_info = requests.get(url, params={**self.params, **params}).json()['response']
-        return photo_info['count'], photo_info['items']
+        photo_info_resp = requests.get(url, params={**self.params, **params})
+        if photo_info_resp.status_code == 200: #Проверка статуса ответа на запрос
+            print("Запрос в ВКонтакте прошел успешно! Ответ получен")
+            photo_info = photo_info_resp.json()['response']
+            return photo_info['count'], photo_info['items']
+        else:
+            print("При запросе  ВКонтакте произошла ошибка. Детальную информацию можно получить из кода ошибки")
+            return photo_info_resp.status_code
 
     def _get_info_about_photo(self):
         photo_count, photo_items = self._get_photo()
@@ -94,7 +100,7 @@ class Yandex:
     def _create_folder(self, name_of_folder):
         url = "https://cloud-api.yandex.net/v1/disk/resources"
         params = {'path': name_of_folder}
-        if requests.get(url, headers=self.headers, params=params).status_code != 200:
+        if requests.get(url, headers=self.headers, params=params).status_code != 200: # Проверка
             requests.put(url, headers=self.headers, params=params)
             print(f'\n Директория {name_of_folder} создана на Яндекс диске\n')
         else:
@@ -105,11 +111,17 @@ class Yandex:
     def _in_folder(self, name_of_folder):
         url = "https://cloud-api.yandex.net/v1/disk/resources"
         params = {'path': name_of_folder}
-        resource = requests.get(url, headers=self.headers, params=params).json()['_embedded']['items']
-        in_folder_list = []
-        for elem in resource:
-            in_folder_list.append(elem['name'])
-        return in_folder_list
+        resource_resp = requests.get(url, headers=self.headers, params=params)
+        if resource_resp.status_code == 200: # Проерка статуса ответа на запрос
+            print("Успешно получена ссылка для загрузки фото на Яндекс.Облако! Начинается загрузка...")
+            resource = resource_resp.json()['_embedded']['items']
+            in_folder_list = []
+            for elem in resource:
+                in_folder_list.append(elem['name'])
+            return in_folder_list
+        else:
+            print("При получении ссылки для загрузки на Яндекс.Облако произошла ошибка. Детальную информацию можно получить из кода ошибки")
+            return resource_resp.status_code
 
     #Загрузка фотографий на Яндекс Облако
     def _create_copy(self, dict_files):
@@ -156,3 +168,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
